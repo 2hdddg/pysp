@@ -8,9 +8,15 @@ class Tokenizer(object):
     def _get_lines(self):
         return self._input.splitlines(True)
 
-    def tokens(self):
+    def get_tokens(self):
+        def is_block_start(c):
+            return c in ('(')
+
+        def is_block_end(c):
+            return c in (')')
+
         def is_operator(c):
-            return c in ('(', ')', '+', '-', '*', '/')
+            return c in ('+', '-', '*', '/')
 
         def is_string_start(c):
             return c in ('"', "'")
@@ -37,6 +43,12 @@ class Tokenizer(object):
                 'row': row,
                 'column': column
             }
+
+        def blockstart_token(block, row, column):
+            return token('blockstart', block, row, column)
+
+        def blockend_token(block, row, column):
+            return token('blockend', block, row, column)
 
         def string_token(contents, row, column):
             return token('string', contents, row, column)
@@ -85,11 +97,11 @@ class Tokenizer(object):
                         raise "hell"
                     state['has_decimal'] = True
                     token += c
-                if is_whitespace(c):
-                    return [number_token(token, state_row, state_column)], None
-                if is_operator(c):
-                    return [number_token(token, state_row, state_column), operator_token(c, row, column)], None
-                raise "hell near row: %s, column: %s" % (row, column)
+                else:
+                    number = number_token(token, state_row, state_column)
+                    tokens, state = next_no_state(c, row, column)
+                    tokens.insert(0, number)
+                    return tokens, state
 
             in_comment = state.get('in_comment', False)
             if in_comment:
@@ -124,6 +136,12 @@ class Tokenizer(object):
 
             if is_operator(c):
                 return [operator_token(c, row, column)], None
+
+            if is_block_start(c):
+                return [blockstart_token(c, row, column)], None
+
+            if is_block_end(c):
+                return [blockend_token(c, row, column)], None
 
             if is_string_start(c):
                 return [], {
@@ -187,17 +205,17 @@ class Tokenizer(object):
     def end(self):
         pass
 
-example = '''
-    # Comment
-    (12+1)
-a b c
-'string'
-` a
-multiline
-comment!`
-'''
+if __name__ == "__main__":
+    example = '''
+        # Comment
+        (12+1)
+    a b c
+    'string'
+    ` a
+    multiline
+    comment!`
+    '''
 
-tokenizer = Tokenizer(example)
-for x in tokenizer.tokens():
-    print x
-
+    tokenizer = Tokenizer(example)
+    for x in tokenizer.get_tokens():
+        print x
