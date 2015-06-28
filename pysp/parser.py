@@ -1,40 +1,100 @@
 from pexceptions import ParserError
 import runtime
 
+"""
+    (define id expr)
+        (define pi 3.14)
+        (define salutation (list-ref '("Hi" "Hello") (random 2)))
+
+    (define id (lambda (arg ...) body ...))
+
+    (define (id arg ...) body ...)
+        (define (greet name)
+          (string-append salutation ", " name))
+"""
+
 
 class Parser(object):
     def __init__(self, tokens):
         self._tokens = tokens
 
     def get_ast(self):
-        def parse(node, token):
+        token_iterator = iter(self._tokens)
+
+        def get_next_token():
+            try:
+                return token_iterator.next()
+            except StopIteration:
+                return None
+
+        def parse_number(node, token):
+            atom = NumberAtom(token)
+            node.add_child(atom)
+
+        def parse_string(node, token):
+            atom = StringAtom(token)
+            node.add_child(atom)
+
+        def parse_symbol(node, token):
+            atom = Symbol(token)
+            node.add_child(atom)
+
+        def parse_operator(node, token):
+            atom = Symbol(token)
+            node.add_child(atom)
+
+        def parse_token(node, token):
             type = token['type']
-            leaf = leafs.get(type, None)
-            if leaf:
-                child = leaf(token)
-                node.add_child(child)
-                return node
 
-            if type == 'blockstart':
-                child = Node(parent=node)
-                node.add_child(child)
-                return child
+            if type == 'number':
+                return parse_number(node, token)
+            if type == 'string':
+                return parse_string(node, token)
+            if type == 'symbol':
+                return parse_symbol(node, token)
+            if type == 'operator':
+                return parse_operator(node, token)
 
-            if type == 'blockend':
-                parent = node.get_parent()
-                if not parent:
-                    message = "Misplaced blockend in token:" + str(token)
-                    raise ParserError(message)
-                return parent
+        def parse(node):
+            while True:
+                token = get_next_token()
+                if not token:
+                    raise ParserError("Ho")
 
-        root = Root()
-        node = root
+                type = token['type']
 
-        for token in self._tokens:
-            node = parse(node, token)
+                if type == 'blockend':
+                    break
 
-        if node != root:
-            raise ParserError("Missing blockend")
+                if type == 'blockstart':
+                    node.add_child(parse(Node(parent=node)))
+                else:
+                    parse_token(node, token)
+            return node
+
+        def parse_root():
+            root = Root()
+            while True:
+                token = get_next_token()
+                if not token:
+                    break
+
+                type = token['type']
+
+                if type == 'blockend':
+                    raise ParserError('Too many )?')
+                if type == 'blockstart':
+                    root.add_child(parse(Node(parent=root)))
+                else:
+                    parse_token(root, token)
+
+            return root
+
+        root = parse_root()
+
+        hanging_token = get_next_token()
+        if hanging_token:
+            raise ParserError("hanging")
 
         return root
 
@@ -51,6 +111,9 @@ class Root(object):
 
     def get_children(self):
         return self._children
+
+    def number_of_children(self):
+        return len(self._children)
 
     def output(self, indent, out):
         out(indent * ' ' + str(self))
@@ -110,12 +173,17 @@ class Symbol(object):
         return 'symbol:%s' % self.value
 
 
-leafs = {
-    'number': NumberAtom,
-    'string': StringAtom,
-    'symbol': Symbol,
-    'operator': Symbol
-}
+class Definition(object):
+    pass
+
+
+class ConstantDefinition(Definition):
+    pass
+
+
+class FunctionDefinition(Definition):
+    pass
+
 
 
 if __name__ == "__main__":

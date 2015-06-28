@@ -22,7 +22,7 @@ class Tokenizer(object):
             return c in ('"', "'")
 
         def is_line_comment_start(c):
-            return c in ('#')
+            return c in (';')
 
         def is_multiline_comment_start(c):
             return c in ('`')
@@ -207,7 +207,7 @@ class Tokenizer(object):
 
 if __name__ == "__main__":
     example = '''
-        # Comment
+        ; Comment
         (12+1)
     a b c
     'string'

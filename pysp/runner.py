@@ -11,18 +11,6 @@ symbols = {
     '+': { 'x': 1}
 }
 
-"""
-    (define id expr)
-        (define pi 3.14)
-        (define salutation (list-ref '("Hi" "Hello") (random 2)))
-
-    (define id (lambda (arg ...) body ...))
-
-    (define (id arg ...) body ...)
-        (define (greet name)
-          (string-append salutation ", " name))
-"""
-
 class Runner(object):
     def __init__(self, ast):
         self._ast = ast
