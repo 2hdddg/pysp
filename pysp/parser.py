@@ -1,5 +1,4 @@
 from pexceptions import ParserError
-import runtime
 
 """
     (define id expr)
@@ -28,11 +27,11 @@ class Parser(object):
                 return None
 
         def parse_number(node, token):
-            atom = NumberAtom(token)
+            atom = Number(token)
             node.add_child(atom)
 
         def parse_string(node, token):
-            atom = StringAtom(token)
+            atom = String(token)
             node.add_child(atom)
 
         def parse_symbol(node, token):
@@ -43,7 +42,7 @@ class Parser(object):
             atom = Symbol(token)
             node.add_child(atom)
 
-        def parse_token(node, token):
+        def parse_other(node, token):
             type = token['type']
 
             if type == 'number':
@@ -59,7 +58,7 @@ class Parser(object):
             while True:
                 token = get_next_token()
                 if not token:
-                    raise ParserError("Ho")
+                    raise ParserError("Expected token")
 
                 type = token['type']
 
@@ -69,7 +68,7 @@ class Parser(object):
                 if type == 'blockstart':
                     node.add_child(parse(Node(parent=node)))
                 else:
-                    parse_token(node, token)
+                    parse_other(node, token)
             return node
 
         def parse_root():
@@ -83,11 +82,11 @@ class Parser(object):
 
                 if type == 'blockend':
                     raise ParserError('Too many )?')
+
                 if type == 'blockstart':
                     root.add_child(parse(Node(parent=root)))
                 else:
-                    parse_token(root, token)
-
+                    parse_other(root, token)
             return root
 
         root = parse_root()
@@ -142,22 +141,16 @@ class Atom(object):
     def __init__(self, token):
         self.value = token['value']
 
-    def get_runtime_instance(self):
-        raise "missing"
-
     def output(self, indent, out):
         out(indent * ' ' + str(self))
 
 
-class NumberAtom(Atom):
-    def get_runtime_instance(self):
-        return runtime.Number(self.value)
-
+class Number(Atom):
     def __str__(self):
         return 'number:%s' % self.value
 
 
-class StringAtom(Atom):
+class String(Atom):
     def __str__(self):
         return 'string:%s' % self.value
 
@@ -171,18 +164,6 @@ class Symbol(object):
 
     def __str__(self):
         return 'symbol:%s' % self.value
-
-
-class Definition(object):
-    pass
-
-
-class ConstantDefinition(Definition):
-    pass
-
-
-class FunctionDefinition(Definition):
-    pass
 
 
 

@@ -1,46 +1,13 @@
-from parser import Atom, Node, Symbol
-from pexceptions import MissingSymbolError
+import runtime
 
-
-class StackFrame(object):
-    def __init__(self, parent):
-        self.parent = parent
-        self.result = None
-
-symbols = {
-    '+': { 'x': 1}
-}
 
 class Runner(object):
     def __init__(self, ast):
         self._ast = ast
 
     def run(self):
-        def find_symbol(frame, name):
-            symbol = symbols.get(name, None)
-            if not symbol:
-                raise MissingSymbolError(name)
-
-        def evaluate_symbol(frame, name):
-            symbol = find_symbol(frame, name)
-
-        def evaluate(frame, node):
-            for child in node.get_children():
-                if isinstance(child, Atom):
-                    frame.result = child.get_runtime_instance()
-
-                if isinstance(child, Node):
-                    next_frame = StackFrame(frame)
-                    evaluate(next_frame, child)
-                    frame.result = next_frame.result
-
-                if isinstance(child, Symbol):
-                    evaluate_symbol(frame, child.value)
-                    #symbol = find_symbol(frame, child.value)
-
-        frame = StackFrame(None)
-        evaluate(frame, self._ast)
-        return frame.result
+        scope = runtime.Scope()
+        return scope.execute(self._ast)
 
 
 if __name__ == "__main__":
@@ -76,3 +43,13 @@ if __name__ == "__main__":
         2 3
     '''
     print_result(code)
+
+    code = '''
+        'string'
+    '''
+    print_result(code)
+
+    code = '''
+        (1)
+    '''
+    #print_result(code)
