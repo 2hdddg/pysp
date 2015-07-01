@@ -96,7 +96,7 @@ class PlusFunction(Function):
             return x + y
         numbers = map(get_number, parameters)
         sum = reduce(acc, numbers)
-        return sum
+        return Number(sum)
 
 _symbols = {
     '+': PlusFunction()
