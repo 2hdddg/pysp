@@ -10,6 +10,8 @@ from pexceptions import ParserError
     (define (id arg ...) body ...)
         (define (greet name)
           (string-append salutation ", " name))
+
+    (map '(1, 2, 3), (lambda (x)()))
 """
 
 
@@ -42,6 +44,20 @@ class Parser(object):
             atom = Symbol(token)
             node.add_child(atom)
 
+        def parse_define(node, token):
+            # Put definition of define in separate
+            # node
+            definition_node = parse(Node())
+            # Evaluate definition...
+
+        def parse_positional_keyword(node, token):
+            value = token['value']
+            if value == 'define':
+                return parse_define(node, token)
+            if value == 'lambda':
+                pass
+
+
         def parse_other(node, token):
             type = token['type']
 
@@ -50,6 +66,12 @@ class Parser(object):
             if type == 'string':
                 return parse_string(node, token)
             if type == 'symbol':
+                # First symbol can represent keyword
+                # that needs special parsing
+                #if not node.number_of_children():
+                #    keyword = parse_positional_keyword(node, token)
+                #    if keyword:
+                #        return keyword
                 return parse_symbol(node, token)
             if type == 'operator':
                 return parse_operator(node, token)
@@ -125,7 +147,7 @@ class Root(object):
 
 
 class Node(Root):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super(Node, self).__init__()
         self._parent = parent
         self._is_open = True
@@ -165,6 +187,10 @@ class Symbol(object):
     def __str__(self):
         return 'symbol:%s' % self.value
 
+
+class Closure(object):
+    def __init__(self):
+        pass
 
 
 if __name__ == "__main__":

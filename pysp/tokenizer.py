@@ -126,6 +126,12 @@ class Tokenizer(object):
             if is_operator(c):
                 return [symbol_token(token, state_row, state_column), operator_token(c, row, column)], None
 
+            if is_block_start(c):
+                return [symbol_token(token, state_row, state_column), blockstart_token(c, row, column)], None
+
+            if is_block_end(c):
+                return [symbol_token(token, state_row, state_column), blockend_token(c, row, column)], None
+
             token += c
             state['token'] = token
             return [], state
