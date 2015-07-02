@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
+from pysp.pexceptions import *
 from pysp.tokenizer import *
 
 
@@ -53,6 +54,16 @@ class TestTokenizer(unittest.TestCase):
 
         self.assertEqual(token['type'], 'string')
         self.assertEqual(token['value'], '"')
+
+    def test_unfinished_string_raises_error(self):
+        code = '''
+            "started..but not ended
+        '''
+
+        def raises():
+            util_get_tokens(code)
+
+        self.assertRaises(UnexpectedEnd, raises)
 
     def test_can_tokenize_a_line_comment(self):
         token = util_get_tokens(';comment')[0]

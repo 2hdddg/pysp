@@ -1,9 +1,9 @@
+from pexceptions import UnexpectedEnd
+
+
 class Tokenizer(object):
     def __init__(self,  input):
         self._input = input
-
-    def begin(self):
-        pass
 
     def _get_lines(self):
         return self._input.splitlines(True)
@@ -203,15 +203,10 @@ class Tokenizer(object):
         row += 1
         tokens, next_state = next(' ', state, row, 0)
         if next_state:
-            print "Error near:" + state['token']
-            print "State is: " + str(state)
-            print "Next state is: " + str(next_state)
-            raise "hell"
+            raise UnexpectedEnd('Still in state: ' + str(state))
         for t in tokens:
             yield t
 
-    def end(self):
-        pass
 
 if __name__ == "__main__":
     example = '''
