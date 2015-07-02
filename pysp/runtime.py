@@ -3,12 +3,22 @@ from pexceptions import MissingSymbolError, NoFunctionError
 
 
 class Scope(object):
-    def __init__(self, parent=None, level=0):
+    def __init__(self, parent):
         self.parent = parent
-        self.level = level
 
     def nest(self):
-        return Scope(parent=self, level=self.level + 1)
+        return Scope(parent=self)
+
+    def _apply(self, evaluated):
+        try:
+            func = evaluated.pop(0)
+        except IndexError:
+            raise NoFunctionError("Empty...")
+
+        if isinstance(func, Function):
+            return func.apply(self, evaluated)
+        else:
+            raise NoFunctionError('Cannot execute xxx as function')
 
     def execute(self, node):
         def find_symbol(name):
@@ -28,21 +38,6 @@ class Scope(object):
             next = self.nest()
             return next.execute(ast)
 
-        def apply(evaluated):
-            if self.level:
-                try:
-                    func = evaluated.pop(0)
-                except IndexError:
-                    raise NoFunctionError("Empty...")
-
-                if isinstance(func, Function):
-                    return func.apply(self, evaluated)
-                else:
-                    raise NoFunctionError('Cannot execute xxx as function')
-            else:
-                # Root behavior
-                return evaluated.pop()
-
         def evaluate(node):
             evaluated = []
             for child in node.get_children():
@@ -60,7 +55,15 @@ class Scope(object):
             return evaluated
 
         evaluated = evaluate(node)
-        return apply(evaluated)
+        return self._apply(evaluated)
+
+
+class Module(Scope):
+    def __init__(self):
+        self.parent = None
+
+    def _apply(self, evaluated):
+        return evaluated.pop()
 
 
 class Type(object):
@@ -85,15 +88,19 @@ class String(object):
     def __str__(self):
         return repr(self.value)
 
+
 class Function(object):
     pass
+
 
 class PlusFunction(Function):
     def apply(self, scope, parameters):
         def get_number(p):
             return int(p.value)
+
         def acc(x, y):
             return x + y
+
         numbers = map(get_number, parameters)
         sum = reduce(acc, numbers)
         return Number(sum)

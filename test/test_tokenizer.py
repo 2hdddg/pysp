@@ -26,7 +26,35 @@ class TestTokenizer(unittest.TestCase):
 
         self.assertEqual(token['type'], 'number')
 
-    def test_can_tokenize_a_comment(self):
+    def test_can_tokenize_a_string_with_apostrophes(self):
+        token = util_get_tokens("'str'")[0]
+
+        self.assertEqual(token['type'], 'string')
+        self.assertEqual(token['value'], 'str')
+
+    def test_can_tokenize_a_string_with_quotes(self):
+        token = util_get_tokens('"str"')[0]
+
+        self.assertEqual(token['type'], 'string')
+        self.assertEqual(token['value'], 'str')
+
+    def test_quoted_string_can_contain_apostrophes(self):
+        token = util_get_tokens('''
+                "'"
+            ''')[0]
+
+        self.assertEqual(token['type'], 'string')
+        self.assertEqual(token['value'], "'")
+
+    def test_apostrophed_string_can_contain_quotes(self):
+        token = util_get_tokens('''
+                '"'
+            ''')[0]
+
+        self.assertEqual(token['type'], 'string')
+        self.assertEqual(token['value'], '"')
+
+    def test_can_tokenize_a_line_comment(self):
         token = util_get_tokens(';comment')[0]
 
         self.assertEqual(token['type'], 'comment')
@@ -37,3 +65,20 @@ class TestTokenizer(unittest.TestCase):
         self.assertEqual(tokens[0]['type'], 'blockstart')
         self.assertEqual(tokens[1]['type'], 'symbol')
         self.assertEqual(tokens[2]['type'], 'blockend')
+
+    def test_can_tokenize_line_comment_number_and_line_comment(self):
+        tokens = util_get_tokens('''
+            ; line 1
+            1024
+            ; line 2
+            ''')
+
+        self.assertEqual(tokens[0]['type'], 'comment')
+        self.assertEqual(tokens[1]['type'], 'number')
+        self.assertEqual(tokens[0]['type'], 'comment')
+
+    def test_symbol_can_contain_question_mark(self):
+        token = util_get_tokens('symb?')[0]
+
+        self.assertEqual(token['type'], 'symbol')
+        self.assertEqual(token['value'], 'symb?')

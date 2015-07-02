@@ -201,9 +201,11 @@ class Tokenizer(object):
 
         # Flush
         row += 1
-        tokens, state = next(' ', state, row, 0)
-        if state:
+        tokens, next_state = next(' ', state, row, 0)
+        if next_state:
             print "Error near:" + state['token']
+            print "State is: " + str(state)
+            print "Next state is: " + str(next_state)
             raise "hell"
         for t in tokens:
             yield t

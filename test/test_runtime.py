@@ -14,8 +14,8 @@ class TestRuntime(unittest.TestCase):
         tokens = tokenizer.get_tokens()
         parser = Parser(tokens)
         ast = parser.get_ast()
-        scope = Scope()
-        result = scope.execute(ast)
+        module = Module()
+        result = module.execute(ast)
         return result
 
     # Behaviour without any scope
@@ -43,7 +43,7 @@ class TestRuntime(unittest.TestCase):
     def test_number_cannot_be_executed_as_function(self):
         def test():
             code = '(1)'
-            result = self.execute(code)
+            self.execute(code)
 
         self.assertRaises(NoFunctionError, test)
 
