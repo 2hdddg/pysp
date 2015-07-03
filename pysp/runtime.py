@@ -40,7 +40,7 @@ class Scope(object):
 
         def evaluate(node):
             evaluated = []
-            for child in node.get_children():
+            for child in node.children:
                 if isinstance(child, parser.Atom):
                     evaluated.append(
                         evaluate_atom(child))

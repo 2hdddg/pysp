@@ -25,7 +25,7 @@ class TestParser(unittest.TestCase):
         '''
         ast = self._get_ast(code)
 
-        number = ast.get_children()[0]
+        number = ast.children[0]
         self.assertIsInstance(number, Atom)
         self.assertIsInstance(number, Number)
         self.assertEqual(number.value, '12')
@@ -36,7 +36,7 @@ class TestParser(unittest.TestCase):
         '''
         ast = self._get_ast(code)
 
-        number = ast.get_children()[0]
+        number = ast.children[0]
         self.assertIsInstance(number, Atom)
         self.assertIsInstance(number, String)
         self.assertEqual(number.value, 'a string')
@@ -47,7 +47,7 @@ class TestParser(unittest.TestCase):
         '''
         ast = self._get_ast(code)
 
-        symbol = ast.get_children()[0]
+        symbol = ast.children[0]
         self.assertIsInstance(symbol, Symbol)
         self.assertEqual(symbol.value, 'the_symbol')
 
@@ -57,21 +57,39 @@ class TestParser(unittest.TestCase):
         '''
         ast = self._get_ast(code)
 
-        top_node = ast.get_children()[0]
+        top_node = ast.children[0]
         self.assertIsInstance(top_node, Node)
-        self.assertIsInstance(top_node.get_children()[0], Symbol)
-        self.assertEqual(top_node.get_children()[0].value, 'top')
+        self.assertIsInstance(top_node.children[0], Symbol)
+        self.assertEqual(top_node.children[0].value, 'top')
 
-        top_symbol = top_node.get_children()[0]
+        top_symbol = top_node.children[0]
         self.assertIsInstance(top_symbol, Symbol)
         self.assertEqual(top_symbol.value, 'top')
 
-        nested1_node = top_node.get_children()[1]
+        nested1_node = top_node.children[1]
         self.assertIsInstance(nested1_node, Node)
-        self.assertIsInstance(nested1_node.get_children()[0], Symbol)
-        self.assertEqual(nested1_node.get_children()[0].value, 'nested1')
+        self.assertIsInstance(nested1_node.children[0], Symbol)
+        self.assertEqual(nested1_node.children[0].value, 'nested1')
 
-        nested2_node = top_node.get_children()[2]
+        nested2_node = top_node.children[2]
         self.assertIsInstance(nested2_node, Node)
-        self.assertIsInstance(nested2_node.get_children()[0], Symbol)
-        self.assertEqual(nested2_node.get_children()[0].value, 'nested2')
+        self.assertIsInstance(nested2_node.children[0], Symbol)
+        self.assertEqual(nested2_node.children[0].value, 'nested2')
+
+    def test_can_parse_lambda(self):
+        code = '''
+        (lambda (param1 param2) param2)
+        '''
+        ast = self._get_ast(code)
+
+        closure = ast.children[0]
+
+        self.assertIsInstance(closure, Closure)
+        # Parameters
+        self.assertEqual(len(closure.parameters), 2)
+        self.assertIsInstance(closure.parameters[0], Symbol)
+        self.assertEqual(closure.parameters[0].value, 'param1')
+        self.assertIsInstance(closure.parameters[1], Symbol)
+        self.assertEqual(closure.parameters[1].value, 'param2')
+        # Body
+        self.assertIsInstance(closure.body, Symbol)

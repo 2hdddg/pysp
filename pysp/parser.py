@@ -44,21 +44,7 @@ class Parser(object):
             atom = Symbol(token)
             node.add_child(atom)
 
-        def parse_define(node, token):
-            # Put definition of define in separate
-            # node
-            definition_node = parse(Node())
-            # Evaluate definition...
-
-        def parse_positional_keyword(node, token):
-            value = token['value']
-            if value == 'define':
-                return parse_define(node, token)
-            if value == 'lambda':
-                pass
-
-
-        def parse_other(node, token):
+        def parse_token(node, token):
             type = token['type']
 
             if type == 'number':
@@ -66,15 +52,33 @@ class Parser(object):
             if type == 'string':
                 return parse_string(node, token)
             if type == 'symbol':
-                # First symbol can represent keyword
-                # that needs special parsing
-                #if not node.number_of_children():
-                #    keyword = parse_positional_keyword(node, token)
-                #    if keyword:
-                #        return keyword
                 return parse_symbol(node, token)
             if type == 'operator':
                 return parse_operator(node, token)
+
+        def build_lambda(tail):
+            if len(tail) != 2:
+                raise ParserError('Lambda needs 2')
+
+            parameters_node = tail[0]
+            parameters = parameters_node.children
+            body = tail[1]
+
+            closure = Closure(parameters, body)
+            return closure
+
+        def analyze(node):
+            if node.number_of_children == 0:
+                return node
+
+            children = node.children
+            first = children[0]
+            if isinstance(first, Symbol):
+                value = first.value
+                if value == 'lambda':
+                    return build_lambda(children[1:])
+
+            return node
 
         def parse(node):
             while True:
@@ -90,8 +94,8 @@ class Parser(object):
                 if type == 'blockstart':
                     node.add_child(parse(Node(parent=node)))
                 else:
-                    parse_other(node, token)
-            return node
+                    parse_token(node, token)
+            return analyze(node)
 
         def parse_root():
             root = Root()
@@ -108,7 +112,7 @@ class Parser(object):
                 if type == 'blockstart':
                     root.add_child(parse(Node(parent=root)))
                 else:
-                    parse_other(root, token)
+                    parse_token(root, token)
             return root
 
         root = parse_root()
@@ -122,19 +126,19 @@ class Parser(object):
 
 class Root(object):
     def __init__(self):
-        self._children = []
+        self.children = []
 
     def get_parent(self):
         return None
 
     def add_child(self, child):
-        self._children.append(child)
+        self.children.append(child)
 
-    def get_children(self):
-        return self._children
+    #def get_children(self):
+    #    return self.children
 
     def number_of_children(self):
-        return len(self._children)
+        return len(self.children)
 
     def output(self, indent, out):
         out(indent * ' ' + str(self))
@@ -189,39 +193,6 @@ class Symbol(object):
 
 
 class Closure(object):
-    def __init__(self):
-        pass
-
-
-if __name__ == "__main__":
-    from tokenizer import Tokenizer
-
-    def print_ast(code):
-        tokenizer = Tokenizer(code)
-        tokens = tokenizer.get_tokens()
-
-        parser = Parser(tokens)
-        ast = parser.get_ast()
-
-        def out(s):
-            print s
-
-        print "Code:"
-        print code
-        print "Output:"
-        ast.output(indent=2, out=out)
-
-    code = '''
-        12
-    '''
-    print_ast(code)
-
-    code = '''
-        (abc 1 2 'str')
-    '''
-    print_ast(code)
-
-    code = '''
-        (+ (* 2 2) (/ 6 3))
-    '''
-    print_ast(code)
+    def __init__(self, parameters, body):
+        self.parameters = parameters
+        self.body = body
