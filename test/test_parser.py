@@ -14,7 +14,7 @@ class TestParser(unittest.TestCase):
             print t
 
     def _get_ast(self, code):
-        tokens = Tokenizer(code).get_tokens()
+        tokens = Tokenizer(code).next()
         parser = Parser(tokens)
 
         return parser.get_ast()
@@ -75,6 +75,15 @@ class TestParser(unittest.TestCase):
         self.assertIsInstance(nested2_node, Node)
         self.assertIsInstance(nested2_node.children[0], Symbol)
         self.assertEqual(nested2_node.children[0].value, 'nested2')
+
+    def test_can_parse_constant_definition(self):
+        code = '(define pi 3)'
+        ast = self._get_ast(code)
+
+        definition = ast.children[0]
+        self.assertIsInstance(definition, Definition)
+        self.assertEqual(definition.name, 'pi')
+        self.assertIsInstance(definition.value, Number)
 
     def test_can_parse_lambda(self):
         code = '''

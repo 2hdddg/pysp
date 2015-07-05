@@ -20,11 +20,10 @@ class Parser(object):
         self._tokens = tokens
 
     def get_ast(self):
-        token_iterator = iter(self._tokens)
 
         def get_next_token():
             try:
-                return token_iterator.next()
+                return self._tokens.next()
             except StopIteration:
                 return None
 
@@ -67,6 +66,18 @@ class Parser(object):
             closure = Closure(parameters, body)
             return closure
 
+        def build_definition(tail):
+            if len(tail) != 2:
+                raise ParserError('Define needs 2')
+
+            name = tail[0]
+            if not isinstance(name, Symbol):
+                raise ParserError('Define needs name')
+
+            value = tail[1]
+
+            return Definition(name.value, value)
+
         def analyze(node):
             if node.number_of_children == 0:
                 return node
@@ -77,6 +88,9 @@ class Parser(object):
                 value = first.value
                 if value == 'lambda':
                     return build_lambda(children[1:])
+
+                if value == 'define':
+                    return build_definition(children[1:])
 
             return node
 
@@ -134,9 +148,6 @@ class Root(object):
     def add_child(self, child):
         self.children.append(child)
 
-    #def get_children(self):
-    #    return self.children
-
     def number_of_children(self):
         return len(self.children)
 
@@ -190,6 +201,12 @@ class Symbol(object):
 
     def __str__(self):
         return 'symbol:%s' % self.value
+
+
+class Definition(object):
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
 
 
 class Closure(object):

@@ -5,6 +5,7 @@ from pexceptions import MissingSymbolError, NoFunctionError
 class Scope(object):
     def __init__(self, parent):
         self.parent = parent
+        self.definitions = {}
 
     def nest(self):
         return Scope(parent=self)
@@ -18,17 +19,27 @@ class Scope(object):
         if isinstance(func, Function):
             return func.apply(self, evaluated)
         else:
-            raise NoFunctionError('Cannot execute xxx as function')
+            message = "Cannot execute %s as function" % func
+            raise NoFunctionError(message)
+
+    def find_symbol(self, name):
+        if name in self.definitions:
+            return self.definitions[name]
+
+        if self.parent:
+            return self.parent.find_symbol(name)
+
+        return None
 
     def execute(self, node):
         def find_symbol(name):
-            symbol = _symbols.get(name, None)
+            symbol = self.find_symbol(name)
             if not symbol:
                 raise MissingSymbolError(name)
             return symbol
 
         def evaluate_symbol(ast):
-            return find_symbol(ast.value)
+            return evaluate_child(find_symbol(ast.value))
 
         def evaluate_atom(ast):
             runtime_class = _atoms[ast.__class__]
@@ -38,29 +49,42 @@ class Scope(object):
             next = self.nest()
             return next.execute(ast)
 
+        def evaluate_child(child):
+            if isinstance(child, parser.Atom):
+                return evaluate_atom(child)
+
+            if isinstance(child, parser.Node):
+                return evaluate_node(child)
+
+            if isinstance(child, parser.Symbol):
+                return evaluate_symbol(child)
+
+            # Built-in function
+            if isinstance(child, Function):
+                return child
+
         def evaluate(node):
             evaluated = []
             for child in node.children:
-                if isinstance(child, parser.Atom):
-                    evaluated.append(
-                        evaluate_atom(child))
-
-                if isinstance(child, parser.Node):
-                    evaluated.append(
-                        evaluate_node(child))
-
-                if isinstance(child, parser.Symbol):
-                    evaluated.append(
-                        evaluate_symbol(child))
+                result = evaluate_child(child)
+                if result is not None:
+                    evaluated.append(result)
             return evaluated
 
+        def define(node):
+            for child in node.children:
+                if isinstance(child, parser.Definition):
+                    self.definitions[child.name] = child.value
+
+        define(node)
         evaluated = evaluate(node)
         return self._apply(evaluated)
 
 
-class Module(Scope):
+class Global(Scope):
     def __init__(self):
         self.parent = None
+        self.definitions = _symbols
 
     def _apply(self, evaluated):
         return evaluated.pop()

@@ -11,11 +11,11 @@ class TestRuntime(unittest.TestCase):
 
     def execute(self, code):
         tokenizer = Tokenizer(code)
-        tokens = tokenizer.get_tokens()
+        tokens = tokenizer.next()
         parser = Parser(tokens)
         ast = parser.get_ast()
-        module = Module()
-        result = module.execute(ast)
+        g = Global()
+        result = g.execute(ast)
         return result
 
     # Behaviour without any scope
@@ -34,6 +34,17 @@ class TestRuntime(unittest.TestCase):
 
     def test_a_serie_of_atoms_results_in_last_atom(self):
         code = "1 'string' 3"
+        result = self.execute(code)
+
+        self.assertEqual(result.value, 3)
+
+    # Defines
+    def test_can_evaluate_a_defined_symbol(self):
+        code = '''
+            (define pi 3)
+
+            pi
+        '''
         result = self.execute(code)
 
         self.assertEqual(result.value, 3)

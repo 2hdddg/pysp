@@ -8,7 +8,10 @@ class Tokenizer(object):
     def _get_lines(self):
         return self._input.splitlines(True)
 
-    def get_tokens(self):
+    def __iter__(self):
+        return self.next()
+
+    def next(self):
         def is_block_start(c):
             return c in ('(')
 
