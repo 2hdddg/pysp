@@ -1,5 +1,6 @@
-import parser
-from pexceptions import MissingSymbolError, NoFunctionError
+import pysp.parser as parser
+from pysp.errors import MissingSymbolError, NoFunctionError
+from .builtin import BuiltInFunction, symbols
 
 
 class Scope(object):
@@ -16,6 +17,9 @@ class Scope(object):
             self.definitions[p.value] = v
         return self.execute(closure.body)
 
+    def _apply_builtin(self, builtin, evaluated):
+        return builtin.apply(self, evaluated)
+
     def _apply(self, evaluated):
         try:
             func = evaluated.pop(0)
@@ -23,12 +27,12 @@ class Scope(object):
             raise NoFunctionError("Empty...")
 
         if isinstance(func, BuiltInFunction):
-            return func.apply(self, evaluated)
+            return self._apply_builtin(func, evaluated)
         if isinstance(func, parser.Closure):
             return self._apply_closure(func, evaluated)
-        else:
-            message = "Cannot execute %s as function" % func
-            raise NoFunctionError(message)
+
+        message = "Cannot execute %s as function" % func
+        raise NoFunctionError(message)
 
     def find_symbol(self, name):
         if name in self.definitions:
@@ -40,14 +44,14 @@ class Scope(object):
         return None
 
     def execute(self, node):
-        def find_symbol(name):
+
+        def evaluate_symbol(ast):
+            name = ast.value
             symbol = self.find_symbol(name)
             if not symbol:
                 raise MissingSymbolError(name)
-            return symbol
 
-        def evaluate_symbol(ast):
-            return evaluate_child(find_symbol(ast.value))
+            return evaluate_child(symbol)
 
         def evaluate_node(ast):
             next = self.nest()
@@ -70,12 +74,12 @@ class Scope(object):
                     evaluated.append(result)
             return evaluated
 
-        def define(node):
+        def apply_definitions(node):
             for child in node.children:
                 if isinstance(child, parser.Definition):
                     self.definitions[child.name] = child.value
 
-        define(node)
+        apply_definitions(node)
         evaluated = evaluate(node)
         return self._apply(evaluated)
 
@@ -83,29 +87,7 @@ class Scope(object):
 class Global(Scope):
     def __init__(self):
         self.parent = None
-        self.definitions = _symbols
+        self.definitions = symbols
 
     def _apply(self, evaluated):
         return evaluated.pop()
-
-
-class BuiltInFunction(object):
-    def __init__(self, apply):
-        self.apply = apply
-
-
-def builtin_plus(scope, parameters):
-    def get_number(p):
-        return int(p.value)
-
-    def acc(x, y):
-        return x + y
-
-    numbers = map(get_number, parameters)
-    sum = reduce(acc, numbers)
-    return parser.Number(sum)
-
-
-_symbols = {
-    '+': BuiltInFunction(builtin_plus)
-}

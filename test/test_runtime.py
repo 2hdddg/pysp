@@ -3,7 +3,7 @@ import unittest
 
 from pysp.tokenizer import Tokenizer
 from pysp.parser import Parser
-from pysp.pexceptions import *
+from pysp.errors import *
 from pysp.runtime import *
 
 

@@ -1,4 +1,4 @@
-from pexceptions import UnexpectedEnd
+from errors import UnexpectedEnd
 
 
 class Tokenizer(object):

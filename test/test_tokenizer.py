@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from pysp.pexceptions import *
+from pysp.errors import *
 from pysp.tokenizer import *
 
 

@@ -2,6 +2,7 @@
 class TokenizationError(Exception):
     pass
 
+
 class UnexpectedEnd(TokenizationError):
     def __init__(self, message):
         self.message = message
@@ -33,6 +34,7 @@ class MissingSymbolError(Exception):
 
     def __str__(self):
         return "Unable to find symbol:" + self.name
+
 
 class NoFunctionError(Exception):
     pass

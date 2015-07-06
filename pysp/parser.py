@@ -1,4 +1,4 @@
-from pexceptions import ParserError
+from errors import ParserError
 
 """
     (define id expr)
