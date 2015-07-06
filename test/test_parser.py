@@ -96,10 +96,8 @@ class TestParser(unittest.TestCase):
         self.assertIsInstance(closure, Closure)
         # Parameters
         self.assertEqual(len(closure.parameters), 2)
-        self.assertIsInstance(closure.parameters[0], Symbol)
-        self.assertEqual(closure.parameters[0].value, 'param1')
-        self.assertIsInstance(closure.parameters[1], Symbol)
-        self.assertEqual(closure.parameters[1].value, 'param2')
+        self.assertEqual(closure.parameters[0], 'param1')
+        self.assertEqual(closure.parameters[1], 'param2')
         # Body
         self.assertIsInstance(closure.body, Symbol)
 

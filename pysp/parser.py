@@ -60,12 +60,13 @@ class Parser(object):
                 raise ParserError('Lambda needs 2')
 
             parameters_node = tail[0]
-            parameters = parameters_node.children
+            parameters = []
             # Make sure all parameters are symbols
             # (valid parameter names...)
-            for p in parameters:
+            for p in parameters_node.children:
                 if not isinstance(p, Symbol):
                     raise ParserError("Lambda parameters must be symbol")
+                parameters.append(p.value)
 
             body = tail[1]
 

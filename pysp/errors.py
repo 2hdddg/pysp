@@ -38,3 +38,7 @@ class MissingSymbolError(Exception):
 
 class NoFunctionError(Exception):
     pass
+
+
+class ParameterError(Exception):
+    pass

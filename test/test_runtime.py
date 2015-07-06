@@ -68,6 +68,17 @@ class TestRuntime(unittest.TestCase):
 
         self.assertRaises(NoFunctionError, test)
 
+    def test_call_to_function_with_too_few_params_should_raise(self):
+        def test():
+            code = '''
+                (define add (lambda (x y) (+ x y)))
+
+                (add 3)
+            '''
+            self.execute(code)
+
+        self.assertRaises(ParameterError, test)
+
     # Built in functions
 
     # Add

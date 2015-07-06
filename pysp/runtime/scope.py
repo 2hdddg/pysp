@@ -1,5 +1,5 @@
 import pysp.parser as parser
-from pysp.errors import MissingSymbolError, NoFunctionError
+from pysp.errors import MissingSymbolError, NoFunctionError, ParameterError
 from .builtin import BuiltInFunction, symbols
 
 
@@ -12,9 +12,13 @@ class Scope(object):
         return Scope(parent=self)
 
     def _apply_closure(self, closure, rest):
-        for i, p in enumerate(closure.parameters):
-            v = rest[i]
-            self.definitions[p.value] = v
+        for index, name in enumerate(closure.parameters):
+            try:
+                evaluated = rest[index]
+            except IndexError:
+                raise ParameterError("Too few parameters in call")
+
+            self.definitions[name] = evaluated
         return self.execute(closure.body)
 
     def _apply_builtin(self, builtin, evaluated):
