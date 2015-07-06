@@ -10,14 +10,13 @@ class Scope(object):
     def nest(self):
         return Scope(parent=self)
 
+    def _apply_closure(self, closure, rest):
+        for i, p in enumerate(closure.parameters):
+            v = rest[i]
+            self.definitions[p.value] = v
+        return self.execute(closure.body)
+
     def _apply(self, evaluated):
-
-        def _apply_closure(closure, rest):
-            for i, p in enumerate(closure.parameters):
-                v = rest[i]
-                self.definitions[p.value] = v
-            return self.execute(closure.body)
-
         try:
             func = evaluated.pop(0)
         except IndexError:
@@ -26,7 +25,7 @@ class Scope(object):
         if isinstance(func, BuiltInFunction):
             return func.apply(self, evaluated)
         if isinstance(func, parser.Closure):
-            return _apply_closure(func, evaluated)
+            return self._apply_closure(func, evaluated)
         else:
             message = "Cannot execute %s as function" % func
             raise NoFunctionError(message)
