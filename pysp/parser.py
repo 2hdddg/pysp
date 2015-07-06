@@ -28,19 +28,19 @@ class Parser(object):
                 return None
 
         def parse_number(node, token):
-            atom = Number(token)
+            atom = Number(token['value'])
             node.add_child(atom)
 
         def parse_string(node, token):
-            atom = String(token)
+            atom = String(token['value'])
             node.add_child(atom)
 
         def parse_symbol(node, token):
-            atom = Symbol(token)
+            atom = Symbol(token['value'])
             node.add_child(atom)
 
         def parse_operator(node, token):
-            atom = Symbol(token)
+            atom = Symbol(token['value'])
             node.add_child(atom)
 
         def parse_token(node, token):
@@ -61,6 +61,12 @@ class Parser(object):
 
             parameters_node = tail[0]
             parameters = parameters_node.children
+            # Make sure all parameters are symbols
+            # (valid parameter names...)
+            for p in parameters:
+                if not isinstance(p, Symbol):
+                    raise ParserError("Lambda parameters must be symbol")
+
             body = tail[1]
 
             closure = Closure(parameters, body)
@@ -175,14 +181,17 @@ class Node(Root):
 
 
 class Atom(object):
-    def __init__(self, token):
-        self.value = token['value']
+    def __init__(self, value):
+        self.value = value
 
     def output(self, indent, out):
         out(indent * ' ' + str(self))
 
 
 class Number(Atom):
+    def __init__(self, value):
+        self.value = int(value)
+
     def __str__(self):
         return 'number:%s' % self.value
 
@@ -193,8 +202,8 @@ class String(Atom):
 
 
 class Symbol(object):
-    def __init__(self, token):
-        self.value = token['value']
+    def __init__(self, value):
+        self.value = value
 
     def output(self, indent, out):
         out(indent * ' ' + str(self))

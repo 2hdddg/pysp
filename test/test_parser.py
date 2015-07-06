@@ -28,7 +28,7 @@ class TestParser(unittest.TestCase):
         number = ast.children[0]
         self.assertIsInstance(number, Atom)
         self.assertIsInstance(number, Number)
-        self.assertEqual(number.value, '12')
+        self.assertEqual(number.value, 12)
 
     def test_can_parse_a_string_into_a_string_atom(self):
         code = '''
@@ -102,3 +102,14 @@ class TestParser(unittest.TestCase):
         self.assertEqual(closure.parameters[1].value, 'param2')
         # Body
         self.assertIsInstance(closure.body, Symbol)
+
+    def test_can_parse_lambda_defintion(self):
+        code = '''
+        (define what (lambda (param1 param2) param2))
+        '''
+        ast = self._get_ast(code)
+
+        definition = ast.children[0]
+        self.assertIsInstance(definition, Definition)
+        self.assertEqual(definition.name, 'what')
+        self.assertIsInstance(definition.value, Closure)

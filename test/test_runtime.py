@@ -49,6 +49,16 @@ class TestRuntime(unittest.TestCase):
 
         self.assertEqual(result.value, 3)
 
+    def test_can_evaluate_a_defined_lambda(self):
+        code = '''
+            (define add (lambda (x y) (+ x y)))
+
+            (add 3 4)
+        '''
+        result = self.execute(code)
+
+        self.assertEqual(result.value, 7)
+
     # Error handling
 
     def test_number_cannot_be_executed_as_function(self):
