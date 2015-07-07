@@ -55,19 +55,21 @@ class Parser(object):
             if type == 'operator':
                 return parse_operator(node, token)
 
+        def get_parameters(tail):
+            parameters = []
+            # Make sure all parameters are symbols
+            # (valid parameter names...)
+            for p in tail:
+                if not isinstance(p, Symbol):
+                    raise ParserError("Lambda parameters must be symbol")
+                parameters.append(p.value)
+            return parameters
+
         def build_lambda(tail):
             if len(tail) != 2:
                 raise ParserError('Lambda needs 2')
 
-            parameters_node = tail[0]
-            parameters = []
-            # Make sure all parameters are symbols
-            # (valid parameter names...)
-            for p in parameters_node.children:
-                if not isinstance(p, Symbol):
-                    raise ParserError("Lambda parameters must be symbol")
-                parameters.append(p.value)
-
+            parameters = get_parameters(tail[0].children)
             body = tail[1]
 
             closure = Closure(parameters, body)
@@ -77,13 +79,23 @@ class Parser(object):
             if len(tail) != 2:
                 raise ParserError('Define needs 2')
 
-            name = tail[0]
-            if not isinstance(name, Symbol):
-                raise ParserError('Define needs name')
+            first = tail[0]
+            if isinstance(first, Node):
+                # Defining function
+                name = first.children[0]
+                if isinstance(name, Symbol):
+                    name = name.value
+                    parameters = get_parameters(first.children[1:])
+                    body = tail[1]
+                    closure = Closure(parameters, body)
+                    return Definition(name, closure)
 
-            value = tail[1]
+            if isinstance(first, Symbol):
+                name = first.value
+                value = tail[1]
+                return Definition(name, value)
 
-            return Definition(name.value, value)
+            raise ParserError('Define needs name')
 
         def analyze(node):
             if node.number_of_children == 0:

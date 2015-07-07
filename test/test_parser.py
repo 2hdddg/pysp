@@ -110,4 +110,30 @@ class TestParser(unittest.TestCase):
         definition = ast.children[0]
         self.assertIsInstance(definition, Definition)
         self.assertEqual(definition.name, 'what')
-        self.assertIsInstance(definition.value, Closure)
+        closure = definition.value
+        self.assertIsInstance(closure, Closure)
+        # Parameters
+        self.assertEqual(len(closure.parameters), 2)
+        self.assertEqual(closure.parameters[0], 'param1')
+        self.assertEqual(closure.parameters[1], 'param2')
+        # Body
+        self.assertIsInstance(closure.body, Symbol)
+
+    def test_can_parse_definition_of_function_without_lambda(self):
+        code = '''
+        (define (what param1 param2) param2)
+        '''
+
+        ast = self._get_ast(code)
+
+        definition = ast.children[0]
+        self.assertIsInstance(definition, Definition)
+        self.assertEqual(definition.name, 'what')
+        closure = definition.value
+        self.assertIsInstance(closure, Closure)
+        # Parameters
+        self.assertEqual(len(closure.parameters), 2)
+        self.assertEqual(closure.parameters[0], 'param1')
+        self.assertEqual(closure.parameters[1], 'param2')
+        # Body
+        self.assertIsInstance(closure.body, Symbol)

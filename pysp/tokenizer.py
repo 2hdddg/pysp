@@ -209,19 +209,3 @@ class Tokenizer(object):
             raise UnexpectedEnd('Still in state: ' + str(state))
         for t in tokens:
             yield t
-
-
-if __name__ == "__main__":
-    example = '''
-        ; Comment
-        (12+1)
-    a b c
-    'string'
-    ` a
-    multiline
-    comment!`
-    '''
-
-    tokenizer = Tokenizer(example)
-    for x in tokenizer.get_tokens():
-        print x
