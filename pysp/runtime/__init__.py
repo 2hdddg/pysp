@@ -1,2 +1,2 @@
-from .scope import Scope, Global
+from .frame import Frame
 

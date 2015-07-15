@@ -13,9 +13,9 @@ class TestRuntime(unittest.TestCase):
         tokenizer = Tokenizer(code)
         tokens = tokenizer.next()
         parser = Parser(tokens)
-        ast = parser.get_ast()
-        g = Global()
-        result = g.execute(ast)
+        parsed = parser.parse()
+        g = Frame()
+        result = g.execute(parsed)
         return result
 
     # Behaviour without any scope
@@ -38,6 +38,21 @@ class TestRuntime(unittest.TestCase):
 
         self.assertEqual(result.value, 3)
 
+    # Built in functions
+
+    # Add
+    def test_can_add_two_ints(self):
+        code = '(+ 1 2)'
+        result = self.execute(code)
+
+        self.assertEqual(result.value, 3)
+
+    def test_can_add_series_of_ints(self):
+        code = '(+ 1 2 3 4 5)'
+        result = self.execute(code)
+
+        self.assertEqual(result.value, 15)
+
     # Defines
     def test_can_evaluate_a_defined_symbol(self):
         code = '''
@@ -59,6 +74,7 @@ class TestRuntime(unittest.TestCase):
 
         self.assertEqual(result.value, 7)
 
+    """
     def test_can_evaluate_a_defined_function(self):
         code = '''
             (define (add x y) (+ x y))
@@ -68,6 +84,19 @@ class TestRuntime(unittest.TestCase):
         result = self.execute(code)
 
         self.assertEqual(result.value, 7)
+    """
+
+    def test_can_use_closure(self):
+        code = '''
+            (define get_adder (lambda (x)
+                (lambda (y)
+                    (+ x y))))
+
+            ((get_adder 7) 3)
+        '''
+        result = self.execute(code)
+
+        self.assertEqual(result.value, 10)
 
     # Error handling
 
@@ -76,7 +105,7 @@ class TestRuntime(unittest.TestCase):
             code = '(1)'
             self.execute(code)
 
-        self.assertRaises(NoFunctionError, test)
+        self.assertRaises(ParserError, test)
 
     def test_call_to_function_with_too_few_params_should_raise(self):
         def test():
@@ -88,18 +117,3 @@ class TestRuntime(unittest.TestCase):
             self.execute(code)
 
         self.assertRaises(ParameterError, test)
-
-    # Built in functions
-
-    # Add
-    def test_can_add_two_ints(self):
-        code = '(+ 1 2)'
-        result = self.execute(code)
-
-        self.assertEqual(result.value, 3)
-
-    def test_can_add_series_of_ints(self):
-        code = '(+ 1 2 3 4 5)'
-        result = self.execute(code)
-
-        self.assertEqual(result.value, 15)
