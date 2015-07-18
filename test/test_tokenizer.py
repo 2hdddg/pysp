@@ -2,7 +2,7 @@
 import unittest
 
 from pysp.errors import *
-from pysp.tokenizer import *
+from pysp.tokenizer import token, Tokenizer
 
 
 def util_print_tokens(tokens):
@@ -18,43 +18,43 @@ class TestTokenizer(unittest.TestCase):
 
     def test_can_tokenize_a_symbol(self):
         tokens = util_get_tokens('sym')
-        token = tokens.next()
+        t = tokens.next()
 
-        self.assertEqual(token['type'], 'symbol')
+        self.assertEqual(t.type, token.SYMBOL)
 
     def test_can_tokenize_a_number(self):
         tokens = util_get_tokens('1234')
-        token = tokens.next()
+        t = tokens.next()
 
-        self.assertEqual(token['type'], 'number')
+        self.assertEqual(t.type, token.NUMBER)
 
     def test_can_tokenize_a_string_with_apostrophes(self):
-        token = util_get_tokens("'str'").next()
+        t = util_get_tokens("'str'").next()
 
-        self.assertEqual(token['type'], 'string')
-        self.assertEqual(token['value'], 'str')
+        self.assertEqual(t.type, token.STRING)
+        self.assertEqual(t.value, 'str')
 
     def test_can_tokenize_a_string_with_quotes(self):
-        token = util_get_tokens('"str"').next()
+        t = util_get_tokens('"str"').next()
 
-        self.assertEqual(token['type'], 'string')
-        self.assertEqual(token['value'], 'str')
+        self.assertEqual(t.type, token.STRING)
+        self.assertEqual(t.value, 'str')
 
     def test_quoted_string_can_contain_apostrophes(self):
-        token = util_get_tokens('''
+        t = util_get_tokens('''
                 "'"
             ''').next()
 
-        self.assertEqual(token['type'], 'string')
-        self.assertEqual(token['value'], "'")
+        self.assertEqual(t.type, token.STRING)
+        self.assertEqual(t.value, "'")
 
     def test_apostrophed_string_can_contain_quotes(self):
-        token = util_get_tokens('''
+        t = util_get_tokens('''
                 '"'
             ''').next()
 
-        self.assertEqual(token['type'], 'string')
-        self.assertEqual(token['value'], '"')
+        self.assertEqual(t.type, token.STRING)
+        self.assertEqual(t.value, '"')
 
     def test_unfinished_string_raises_error(self):
         code = '''
@@ -67,16 +67,16 @@ class TestTokenizer(unittest.TestCase):
         self.assertRaises(UnexpectedEnd, raises)
 
     def test_can_tokenize_a_line_comment(self):
-        token = util_get_tokens(';comment').next()
+        t = util_get_tokens(';comment').next()
 
-        self.assertEqual(token['type'], 'comment')
+        self.assertEqual(t.type, token.COMMENT)
 
     def test_can_tokenize_symbol_with_operators_without_white_space(self):
         tokens = util_get_tokens('(n1)')
 
-        self.assertEqual(tokens.next()['type'], 'blockstart')
-        self.assertEqual(tokens.next()['type'], 'symbol')
-        self.assertEqual(tokens.next()['type'], 'blockend')
+        self.assertEqual(tokens.next().type, token.BLOCKSTART)
+        self.assertEqual(tokens.next().type, token.SYMBOL)
+        self.assertEqual(tokens.next().type, token.BLOCKEND)
 
     def test_can_tokenize_line_comment_number_and_line_comment(self):
         tokens = util_get_tokens('''
@@ -85,12 +85,12 @@ class TestTokenizer(unittest.TestCase):
             ; line 2
             ''')
 
-        self.assertEqual(tokens.next()['type'], 'comment')
-        self.assertEqual(tokens.next()['type'], 'number')
-        self.assertEqual(tokens.next()['type'], 'comment')
+        self.assertEqual(tokens.next().type, token.COMMENT)
+        self.assertEqual(tokens.next().type, token.NUMBER)
+        self.assertEqual(tokens.next().type, token.COMMENT)
 
     def test_symbol_can_contain_question_mark(self):
-        token = util_get_tokens('symb?').next()
+        t = util_get_tokens('symb?').next()
 
-        self.assertEqual(token['type'], 'symbol')
-        self.assertEqual(token['value'], 'symb?')
+        self.assertEqual(t.type, token.SYMBOL)
+        self.assertEqual(t.value, 'symb?')
