@@ -3,51 +3,82 @@ import token
 
 Token = token.Token
 
-_block_start = ('(')
-_block_end = (')')
-_operator = ('+', '-', '*', '/')
-_string_start = ('"', "'")
-_comment_start = (';')
-_whitespace = (' ', '\t', '\n')
-_digit = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-_decimal = ('.')
-_allowed_in_symbol = ('?', '_')
 
+def _process(c, state, row, column):
+    tokens = []
 
-def _is(l, c):
-    return c in l
+    if state:
+        tokens, c, state = state(c, row, column)
 
+        if not c:
+            return tokens, None, state
 
-def _is_alpha(c):
-    return c.isalpha()
+    if c.isspace():
+        pass
 
+    elif c in ('+', '-', '*', '/'):
+        tokens.append(Token(token.OPERATOR, c, row, column))
 
-def _blockstart_token(block, row, column):
-    return Token(token.BLOCKSTART, block, row, column)
+    elif c == '(':
+        tokens.append(Token(token.BLOCKSTART, c, row, column))
 
+    elif c == ')':
+        tokens.append(Token(token.BLOCKEND, c, row, column))
 
-def _blockend_token(block, row, column):
-    return Token(token.BLOCKEND, block, row, column)
+    elif c in ('"', "'"):
 
+        string = Token(token.STRING, '', row, column)
 
-def _string_token(contents, row, column):
-    return Token(token.STRING, contents, row, column)
+        def next_string(next_c, next_row, next_column):
+            if c == next_c:
+                return [string], None, None
+            string.value += next_c
+            return [], None, next_string
 
+        state = next_string
 
-def _number_token(number, row, column):
-    return Token(token.NUMBER, number, row, column)
+    elif c.isdigit():
 
+        number = Token(token.NUMBER, c, row, column)
 
-def _operator_token(operator, row, column):
-    return Token(token.OPERATOR, operator, row, column)
+        def next_number(next_c, next_row, next_column):
+            if next_c.isdigit():
+                number.value += next_c
+                return [], None, next_number
+            if next_c == '.':
+                number.value += next_c
+                return [], None, next_number
+            else:
+                return [number], next_c, None
 
+        state = next_number
 
-def _symbol_token(symbol, row, column):
-    return Token(token.SYMBOL, symbol, row, column)
+    elif c == ';':
+        comment = Token(token.COMMENT, c, row, column)
 
+        def next_comment(next_c, next_row, next_column):
+            if next_row > row:
+                return [comment], next_c, None
 
-def _comment_token(comment, row, column):
-    return Token(token.COMMENT, comment, row, column)
+            comment.value += next_c
+            return [], None, next_comment
+
+        state = next_comment
+
+    elif c.isalpha():
+
+        symbol = Token(token.SYMBOL, c, row, column)
+
+        def next_symbol(next_c, next_row, next_column):
+            if next_c.isalpha() or next_c.isdigit() or next_c in ('?', '_'):
+                symbol.value += next_c
+                return [], None, next_symbol
+            else:
+                return [symbol], next_c, None
+
+        state = next_symbol
+
+    return tokens, None, state
 
 
 class Tokenizer(object):
@@ -61,93 +92,16 @@ class Tokenizer(object):
         return self.next()
 
     def next(self):
-
-        def process(c, state, row, column):
-            tokens = []
-
-            if state:
-                tokens, c, state = state(c, row, column)
-
-                if not c:
-                    return tokens, None, state
-
-            if _is(_whitespace, c):
-                pass
-
-            elif _is(_operator, c):
-                tokens.append(_operator_token(c, row, column))
-
-            elif _is(_block_start, c):
-                tokens.append(_blockstart_token(c, row, column))
-
-            elif _is(_block_end, c):
-                tokens.append(_blockend_token(c, row, column))
-
-            elif _is(_string_start, c):
-
-                string = _string_token('', row, column)
-
-                def next_string(next_c, next_row, next_column):
-                    if c == next_c:
-                        return [string], None, None
-                    string.value += next_c
-                    return [], None, next_string
-
-                state = next_string
-
-            elif _is(_digit, c):
-
-                number = _number_token(c, row, column)
-
-                def next_number(next_c, next_row, next_column):
-                    if _is(_digit, next_c):
-                        number.value += next_c
-                        return [], None, next_number
-                    if _is(_decimal, next_c):
-                        number.value += next_c
-                        return [], None, next_number
-                    else:
-                        return [number], next_c, None
-
-                state = next_number
-
-            elif _is(_comment_start, c):
-                comment = _comment_token(c, row, column)
-
-                def next_comment(next_c, next_row, next_column):
-                    if next_row > row:
-                        return [comment], next_c, None
-
-                    comment.value += next_c
-                    return [], None, next_comment
-
-                state = next_comment
-
-            elif _is_alpha(c):
-
-                symbol = _symbol_token(c, row, column)
-
-                def next_symbol(next_c, next_row, next_column):
-                    if _is_alpha(next_c) or _is(_digit, next_c) or _is(_allowed_in_symbol, next_c):
-                        symbol.value += next_c
-                        return [], None, next_symbol
-                    else:
-                        return [symbol], next_c, None
-
-                state = next_symbol
-
-            return tokens, None, state
-
         state = None
         for row, line in enumerate(self._get_lines()):
             for column, char in enumerate(line):
-                tokens, char, state = process(char, state, row, column)
+                tokens, char, state = _process(char, state, row, column)
                 for t in tokens:
                     yield t
 
         # Flush
         row += 1
-        tokens, char, state = process(' ', state, row, 0)
+        tokens, char, state = _process(' ', state, row, 0)
         for t in tokens:
             yield t
 
