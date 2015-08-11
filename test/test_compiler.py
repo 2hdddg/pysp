@@ -2,8 +2,8 @@
 import unittest
 
 from pysp.tokenizer import Tokenizer
-from pysp.compiler import *
-import pysp.ast as ast
+from pysp.compiler import Compiler
+from pysp.ast import ast
 
 
 class TestCompiler(unittest.TestCase):

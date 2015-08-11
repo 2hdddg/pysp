@@ -1,10 +1,11 @@
-from .types import *
+from pysp.ast import types
+
 
 class BuiltInFunction(object):
     def __init__(self, environment, impl):
         self.environment = environment
         self.impl = impl
-        self.type = CLOSURE
+        self.type = types.CLOSURE
 
     def apply(self, values, frame):
         return self.impl(values)
@@ -19,11 +20,12 @@ def _plus(values):
 
     numbers = map(get_number, values)
     sum = reduce(acc, numbers)
-    return Number(sum)
+    return types.Number(sum)
 
 builtins = {
     '+': lambda e: BuiltInFunction(e, _plus),
 }
+
 
 def add_builtins_to_environment(environment):
     for symbol, func in builtins.iteritems():

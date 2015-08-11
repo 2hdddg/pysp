@@ -1,2 +1,2 @@
 from compiler import Compiler
-import ast
+import pysp.ast as ast

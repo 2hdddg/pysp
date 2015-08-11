@@ -1,6 +1,6 @@
-import pysp.ast as ast
+from pysp.ast import ast
 
-from .types import *
+from pysp.ast import types
 from .environment import Environment
 from .builtin import add_builtins_to_environment
 
@@ -17,7 +17,7 @@ class Frame(object):
             ast.DEFINITION: self.evaluate_definition,
             ast.APPLICATION: self.evaluate_application,
             ast.LAMBDA: self.evaluate_lambda,
-            CLOSURE: self.evaluate_closure,
+            types.CLOSURE: self.evaluate_closure,
         }
 
     def nest(self):
@@ -58,7 +58,7 @@ class Frame(object):
                 parameters.append(x.value)
 
             if x.type == ast.BODY:
-                return Closure(parameters, x, environment)
+                return types.Closure(parameters, x, environment)
 
         raise "no body"
 
@@ -66,10 +66,10 @@ class Frame(object):
         return closure
 
     def evaluate_number(self, number, environment):
-        return Number(number.value)
+        return types.Number(number.value)
 
     def evaluate_string(self, string, environment):
-        return String(string.value)
+        return types.String(string.value)
 
     def evaluate_symbol(self, symbol, environment):
         value = environment.get_binding(symbol.value)

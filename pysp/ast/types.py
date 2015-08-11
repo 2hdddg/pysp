@@ -1,4 +1,4 @@
-import pysp.ast as ast
+from pysp.ast import ast
 from pysp.errors import ParameterError
 
 CLOSURE = 'closure'
