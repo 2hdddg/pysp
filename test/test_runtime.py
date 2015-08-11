@@ -2,7 +2,7 @@
 import unittest
 
 from pysp.tokenizer import Tokenizer
-from pysp.parser import Parser
+from pysp.compiler import Compiler
 from pysp.errors import *
 from pysp.runtime import *
 
@@ -12,10 +12,10 @@ class TestRuntime(unittest.TestCase):
     def execute(self, code):
         tokenizer = Tokenizer(code)
         tokens = tokenizer.next()
-        parser = Parser(tokens)
-        parsed = parser.parse()
+        compiler = Compiler(tokens)
+        ast = compiler.compile()
         g = Frame()
-        result = g.execute(parsed)
+        result = g.execute(ast)
         return result
 
     # Behaviour without any scope
