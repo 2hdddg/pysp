@@ -6,15 +6,16 @@ import ast
 class Compiler(object):
     def __init__(self, tokens):
         self._tokens = tokens
-        self._keyword_parsers = {
+        self._sexp = tokens
+        self._parsers = {
             'lambda': self._parse_lambda,
             'define': self._parse_define,
         }
-        self._type_converters = {
-            'symbol': self._convert_symbol,
-            'number': self._convert_number,
-            'string': self._convert_string,
-            'operator': self._convert_operator,
+        self._converters = {
+            'symbol': lambda t: ast.Node(ast.SYMBOL, value=t.value),
+            'number': lambda t: ast.Node(ast.NUMBER, value=int(t.value)),
+            'string': lambda t: ast.Node(ast.STRING, value=t.value),
+            'operator': lambda t: ast.Node(ast.SYMBOL, value=t.value),
         }
         self.root = None
 
@@ -31,17 +32,17 @@ class Compiler(object):
             print "Not even a root"
         raise ParserError(message)
 
-    def _convert_symbol(self, t):
-        return ast.Node(ast.SYMBOL, value=t.value)
+    # def _convert_symbol(self, t):
+    #    return ast.Node(ast.SYMBOL, value=t.value)
 
-    def _convert_operator(self, t):
-        return ast.Node(ast.SYMBOL, value=t.value)
+    # def _convert_operator(self, t):
+    #    return ast.Node(ast.SYMBOL, value=t.value)
 
-    def _convert_number(self, t):
-        return ast.Node(ast.NUMBER, value=int(t.value))
+    # def _convert_number(self, t):
+    #    return ast.Node(ast.NUMBER, value=int(t.value))
 
-    def _convert_string(self, t):
-        return ast.Node(ast.STRING, value=t.value)
+    # def _convert_string(self, t):
+    #    return ast.Node(ast.STRING, value=t.value)
 
     def _add_parameters(self, node, first_is_value=False):
         """ Assumes position is after first '(',
@@ -109,7 +110,7 @@ class Compiler(object):
             self._raise('Illegal definition, needs name!')
 
     def _convert(self, t):
-        converter = self._type_converters.get(t.type)
+        converter = self._converters.get(t.type)
         if not converter:
             self._raise("Do not know what to do 1")
 
@@ -125,7 +126,7 @@ class Compiler(object):
         if t.type == token.SYMBOL:
             value = t.value
 
-            parser = self._keyword_parsers.get(value)
+            parser = self._parsers.get(value)
             if parser:
                 return parser()
 
@@ -153,6 +154,7 @@ class Compiler(object):
 
     def compile(self):
         self.root = ast.Node(ast.ROOT)
+        '''
         t = self._next_token()
 
         while t:
@@ -164,5 +166,17 @@ class Compiler(object):
             else:
                 self.root.add(self._convert(t))
             t = self._next_token()
+        '''
+
+        #self.root = ast.Node(ast.ROOT)
+        for e in self._sexp:
+            if type(e) is list:
+                print "list"
+            else:
+                print e
+            #if e is token.Token:
+            #    print "token"
+            #print type(e)
+            #print e
 
         return self.root

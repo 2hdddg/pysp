@@ -2,6 +2,7 @@
 import unittest
 
 from pysp.tokenizer import Tokenizer
+from pysp.parser import Parser
 from pysp.compiler import Compiler
 from pysp.ast import ast
 
@@ -16,7 +17,8 @@ class TestCompiler(unittest.TestCase):
 
     def _get_ast(self, code):
         tokens = Tokenizer(code).next()
-        compiler = Compiler(tokens)
+        parsed = Parser(tokens).parse()
+        compiler = Compiler(parsed)
 
         return compiler.compile()
 
